@@ -23,7 +23,7 @@ To comment on a pull request, send a `POST` request to the `/comment` endpoint w
 ```sh
 curl \
   -d '{"pull_request": "https://github.com/username/reponame/pull/123", "body": "It works!"}' \
-  -H "Content-Type: application/json"\
+  -H "Content-Type: application/json" \
   -X POST http://localhost:3024/comment
 ```
 

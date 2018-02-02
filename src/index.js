@@ -95,9 +95,9 @@ router.post('/comment', async ctx => {
           ctx.status = 200;
           ctx.body = 'Skipped posting the comment.';
         }
-      }
 
-      return;
+        return;
+      }
     }
 
     console.log(
