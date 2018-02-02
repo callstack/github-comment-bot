@@ -68,7 +68,7 @@ router.post('/comment', async ctx => {
       );
 
       if (comment) {
-        if (options.update) {
+        if (options.update && comment.body !== options.body) {
           console.log(`Updating comment in ${options.pull_request}.`);
 
           await new Promise((resolve, reject) =>
