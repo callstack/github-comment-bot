@@ -14,7 +14,35 @@ router.post('/comment', async ctx => {
   console.log(`Received request for posting: ${JSON.stringify(options)}`);
 
   try {
+    if (!options.pull_request) {
+      ctx.status = 400;
+      ctx.body = 'Pull request URL not specified.';
+
+      return;
+    }
+
+    if (!options.body) {
+      ctx.status = 400;
+      ctx.body = 'Comment body is not specified.';
+
+      return;
+    }
+
     const { name, owner, filepath } = url(options.pull_request);
+
+    if (!name || !owner || !filepath) {
+      ctx.status = 400;
+      ctx.body = 'Invalid pull request URL.';
+
+      return;
+    }
+
+    if (owner !== process.env.GH_REPO_OWNER) {
+      ctx.status = 403;
+      ctx.body = 'Not allowed to comment on the pull request.';
+
+      return;
+    }
 
     const client = github.client(process.env.GH_AUTH_TOKEN);
     const ghissue = client.issue(`${owner}/${name}`, parseInt(filepath, 10));
@@ -37,6 +65,10 @@ router.post('/comment', async ctx => {
 
       if (result.some(r => test(r.body))) {
         console.log('Skipping posting the comment.');
+
+        ctx.status = 200;
+        ctx.body = 'Skipped posting the comment.';
+
         return;
       }
     }
@@ -63,7 +95,7 @@ router.post('/comment', async ctx => {
     console.log(`Successfully posted comment in ${options.pull_request}.`);
 
     ctx.status = 200;
-    ctx.body = '';
+    ctx.body = 'Successfully posted the comment.';
   } catch (e) {
     console.error(e);
 
