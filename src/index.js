@@ -62,6 +62,6 @@ app
   .use(router.routes())
   .use(router.allowedMethods());
 
-app.listen(3024);
+app.listen(process.env.PORT);
 
-console.log(`Server running at http://localhost:3024`);
+console.log(`Server running at http://localhost:${process.env.PORT}`);
