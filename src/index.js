@@ -14,7 +14,7 @@ router.post('/comment', async ctx => {
   const client = github.client(process.env.GH_AUTH_TOKEN);
   const ghissue = client.issue(
     `${options.user}/${options.repo}`,
-    options.pull_request
+    parseInt(options.pull_request.split('/').pop(), 10)
   );
 
   try {
