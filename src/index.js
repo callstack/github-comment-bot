@@ -3,6 +3,7 @@ const Router = require('koa-router');
 const parser = require('koa-bodyparser');
 const logger = require('koa-logger');
 const github = require('octonode');
+const url = require('parse-github-url');
 
 const app = new Koa();
 const router = new Router();
@@ -12,13 +13,12 @@ router.post('/comment', async ctx => {
 
   console.log(`Received request for posting: ${JSON.stringify(options)}`);
 
-  const client = github.client(process.env.GH_AUTH_TOKEN);
-  const ghissue = client.issue(
-    `${options.user}/${options.repo}`,
-    parseInt(options.pull_request.split('/').pop(), 10)
-  );
-
   try {
+    const { name, owner, filepath } = url(options.pull_request);
+
+    const client = github.client(process.env.GH_AUTH_TOKEN);
+    const ghissue = client.issue(`${owner}/${name}`, parseInt(filepath, 10));
+
     const result = await new Promise((resolve, reject) =>
       ghissue.comments((e, r) => {
         if (e) {
