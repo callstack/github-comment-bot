@@ -3,6 +3,7 @@ const Router = require('koa-router');
 const parser = require('koa-bodyparser');
 const logger = require('koa-logger');
 const github = require('octonode');
+const mustache = require('mustache');
 const url = require('parse-github-url');
 
 const app = new Koa();
@@ -21,9 +22,9 @@ router.post('/comment', async ctx => {
       return;
     }
 
-    if (!options.body) {
+    if (!options.template) {
       ctx.status = 400;
-      ctx.body = 'Comment body is not specified.';
+      ctx.body = 'Comment template is not specified.';
 
       return;
     }
@@ -46,8 +47,9 @@ router.post('/comment', async ctx => {
 
     const client = github.client(process.env.GH_AUTH_TOKEN);
     const ghissue = client.issue(`${owner}/${name}`, parseInt(filepath, 10));
+    const ghpr = client.pr(`${owner}/${name}`, parseInt(filepath, 10));
 
-    const result = await new Promise((resolve, reject) =>
+    const comments = await new Promise((resolve, reject) =>
       ghissue.comments((e, r) => {
         if (e) {
           reject(e);
@@ -57,25 +59,37 @@ router.post('/comment', async ctx => {
       })
     );
 
+    const pr = await new Promise((resolve, reject) =>
+      ghpr.info((e, r) => {
+        if (e) {
+          reject(e);
+        } else {
+          resolve(r);
+        }
+      })
+    );
+
+    const text = mustache.render(options.template, pr);
+
     if (options.test) {
       const test =
         options.test.type === 'regex'
-          ? text => new RegExp(options.test.data).test(text)
-          : text => text.includes(options.test.data);
+          ? t => new RegExp(options.test.data).test(t)
+          : t => t.includes(options.test.data);
 
-      const comment = result.find(
+      const comment = comments.find(
         r => test(r.body) && r.user.login === process.env.GH_COMMENT_AUTHOR
       );
 
       if (comment) {
-        if (options.update && comment.body !== options.body) {
+        if (options.update && comment.body !== text) {
           console.log(`Updating comment in ${options.pull_request}.`);
 
           await new Promise((resolve, reject) =>
             ghissue.updateComment(
               comment.id,
               {
-                body: options.body,
+                body: text,
               },
               (e, r) => {
                 if (e) {
@@ -100,14 +114,12 @@ router.post('/comment', async ctx => {
       }
     }
 
-    console.log(
-      `Posting comment "${options.body}" in ${options.pull_request}.`
-    );
+    console.log(`Posting comment "${text}" in ${options.pull_request}.`);
 
     await new Promise((resolve, reject) =>
       ghissue.createComment(
         {
-          body: options.body,
+          body: text,
         },
         (e, r) => {
           if (e) {

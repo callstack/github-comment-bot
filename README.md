@@ -18,11 +18,11 @@ Bot to comment on GitHub pull requests.
 
 ## API
 
-To comment on a pull request, send a `POST` request to the `/comment` endpoint with JSON data including `pull_request` and `body` properties:
+To comment on a pull request, send a `POST` request to the `/comment` endpoint with JSON data including `pull_request` and `template` properties:
 
 ```sh
 curl \
-  -d '{"pull_request": "https://github.com/username/reponame/pull/123", "body": "It works!"}' \
+  -d '{"pull_request": "https://github.com/username/reponame/pull/123", "template": "It works!"}' \
   -H "Content-Type: application/json" \
   -X POST http://localhost:3024/comment
 ```
@@ -30,7 +30,8 @@ curl \
 The JSON data can have the following properties
 
 - `pull_request` (required): Link to the pull request on which to comment.
+- `template` (required): Comment template using Mustache, the data for the PR is passed to the template.
 - `test`: An object with the shape `{ type: "string", data: "Some string" }` or `{ type: "regex", data: "/^Some/" }` to test against existing comments to determine if it should be a new comment or should be skipped.
-- `update`: Boolean to update the existing comment instead of skipping it.
+- `update`: Boolean specifying whether to update the existing comment matching a provided test instead of skipping it.
 
 Made with ❤️.
