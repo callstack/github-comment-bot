@@ -63,11 +63,38 @@ router.post('/comment', async ctx => {
           ? text => new RegExp(options.test.data).test(text)
           : text => text.includes(options.test.data);
 
-      if (result.some(r => test(r.body))) {
-        console.log('Skipping posting the comment.');
+      const comment = result.find(
+        r => test(r.body) && r.user.login === process.env.GH_COMMENT_AUTHOR
+      );
 
-        ctx.status = 200;
-        ctx.body = 'Skipped posting the comment.';
+      if (comment) {
+        if (options.update) {
+          console.log(`Updating comment in ${options.pull_request}.`);
+
+          await new Promise((resolve, reject) =>
+            ghissue.updateComment(
+              comment.id,
+              {
+                body: options.body,
+              },
+              (e, r) => {
+                if (e) {
+                  reject(e);
+                } else {
+                  resolve(r);
+                }
+              }
+            )
+          );
+
+          ctx.status = 200;
+          ctx.body = 'Successfully updated the comment.';
+        } else {
+          console.log('Skipping posting the comment.');
+
+          ctx.status = 200;
+          ctx.body = 'Skipped posting the comment.';
+        }
 
         return;
       }
