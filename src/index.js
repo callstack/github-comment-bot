@@ -10,6 +10,8 @@ const router = new Router();
 router.post('/comment', async ctx => {
   const options = ctx.request.body;
 
+  console.log(`Received request for posting: ${JSON.stringify(options)}`);
+
   const client = github.client(process.env.GH_AUTH_TOKEN);
   const ghissue = client.issue(
     `${options.user}/${options.repo}`,
@@ -27,10 +29,16 @@ router.post('/comment', async ctx => {
       })
     );
 
-    if (result.some(r => r.body === options.body)) {
-      console.log('Comment already posted. Skipping.');
+    if (options.test) {
+      const test =
+        options.test.type === 'regex'
+          ? text => new RegExp(options.test.data).test(text)
+          : text => text.includes(options.test.data);
 
-      return;
+      if (result.some(r => test(r.body))) {
+        console.log('Skipping posting the comment.');
+        return;
+      }
     }
 
     console.log(
