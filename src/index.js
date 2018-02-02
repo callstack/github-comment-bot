@@ -1,9 +1,8 @@
 const Koa = require('koa');
 const Router = require('koa-router');
 const parser = require('koa-bodyparser');
-const github = require('octonode');
-
 const logger = require('koa-logger');
+const github = require('octonode');
 
 const app = new Koa();
 const router = new Router();
@@ -29,8 +28,14 @@ router.post('/comment', async ctx => {
     );
 
     if (result.some(r => r.body === options.body)) {
+      console.log('Comment already posted. Skipping.');
+
       return;
     }
+
+    console.log(
+      `Posting comment "${options.body}" in ${options.pull_request}.`
+    );
 
     await new Promise((resolve, reject) =>
       ghissue.createComment(
@@ -46,6 +51,8 @@ router.post('/comment', async ctx => {
         }
       )
     );
+
+    console.log(`Successfully posted comment in ${options.pull_request}.`);
 
     ctx.status = 200;
     ctx.body = '';
