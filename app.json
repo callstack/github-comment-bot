@@ -1,0 +1,24 @@
+{
+  "name": "GitHub Comment Bot",
+  "description": "Bot to comment on GitHub pull requests",
+  "repository": "https://github.com/callstack/github-comment-bot",
+  "keywords": ["node", "github"],
+  "env": {
+    "PORT": {
+      "description": "Port to run the server.",
+      "value": "3024"
+    },
+    "GH_AUTH_TOKEN": {
+      "description": "Access token for GitHub.",
+      "value": ""
+    },
+    "GH_REPO_OWNER": {
+      "description": "Organization or username on whose repos the bot can comment.",
+      "value": ""
+    },
+    "GH_COMMENT_AUTHOR": {
+      "description": "Username of the bot, should match with the account that created the access token.",
+      "value": ""
+    }
+  }
+}
